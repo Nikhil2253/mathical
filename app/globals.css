@@ -1,26 +1,151 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ------------------------------------------------------------------ */
+/*  Color system — one anchor (indigo) + five topic accents           */
+/*  Each accent maps to a math subject and stays consistent wherever  */
+/*  that subject shows up (chips, icons, stats, steps).                */
+/* ------------------------------------------------------------------ */
+@theme {
+  /* Brand anchor */
+  --color-primary: #4147e8;
+  --color-primary-light: #eef0fe;
+  --color-primary-dark: #2f35c7;
+
+  /* Amber — Geometry / warmth */
+  --color-secondary: #f5a524;
+  --color-secondary-light: #fef3dd;
+  --color-secondary-dark: #c9820e;
+
+  /* Sky — Algebra */
+  --color-sky: #0ea5e9;
+  --color-sky-light: #e0f4fe;
+
+  /* Violet — Calculus */
+  --color-violet: #a855f7;
+  --color-violet-light: #f4e9fe;
+
+  /* Pink — Linear Algebra */
+  --color-pink: #ec4899;
+  --color-pink-light: #fde6f2;
+
+  /* Teal — Differential Equations */
+  --color-teal: #14b8a6;
+  --color-teal-light: #d9f7f2;
+
+  /* Success / verification — Statistics */
+  --color-success: #22c55e;
+  --color-success-light: #dffbe8;
+
+  /* Neutrals */
+  --color-ink: #12172b;
+  --color-ink-soft: #545b79;
+  --color-muted: #8a8fa8;
+  --color-border: #e7e9f2;
+  --color-subtle: #f7f8fd;
+
+  /* Radii */
+  --radius-xl2: 1.25rem;
+  --radius-xl3: 1.75rem;
+
+  /* Shadows */
+  --shadow-softer: 0 2px 10px 0 rgb(18 23 43 / 0.05);
+  --shadow-soft: 0 12px 32px -8px rgb(18 23 43 / 0.14);
+  --shadow-glow: 0 20px 60px -12px rgb(65 71 232 / 0.45);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: #12172b;
+  background: #ffffff;
+}
+
+::selection {
+  background: #4147e8;
+  color: #ffffff;
+}
+
+/* Thin, elegant scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d9dcec;
+  border-radius: 999px;
+  border: 3px solid #ffffff;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c2c6e6;
+}
+
+/* Visible keyboard focus everywhere */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #4147e8;
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+}
+
+/* Faint grid-paper backdrop */
+.bg-grid-faint {
+  background-image:
+    linear-gradient(to right, #e7e9f2 1px, transparent 1px),
+    linear-gradient(to bottom, #e7e9f2 1px, transparent 1px);
+}
+
+/* Traced-curve draw-on animation used in the hero illustration */
+.animate-draw {
+  animation: draw-path 2.2s 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes draw-path {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Ambient blob drift */
+.animate-blob {
+  animation: blob-move 9s ease-in-out infinite;
+}
+@keyframes blob-move {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(4%, 6%) scale(1.08); }
+  66% { transform: translate(-3%, -4%) scale(0.95); }
+}
+
+/* Floating geometric shapes */
+.animate-float {
+  animation: float-shape 5s ease-in-out infinite;
+}
+.animate-float-slow {
+  animation: float-shape 8s ease-in-out infinite;
+}
+@keyframes float-shape {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(8deg); }
 }
