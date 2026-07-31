@@ -694,28 +694,30 @@ function ChipAccent({ children, color = "primary" }: { children: React.ReactNode
   );
 }
 
-function LatexBlock({ latex, className = "" }: { latex: string; className?: string }) {
-  const lines = latex
-    .split("\\\\")
-    .map((l) => l.trim())
-    .filter(Boolean);
+function LatexBlock({
+  latex,
+  className = "",
+}: {
+  latex: string;
+  className?: string;
+}) {
+  let math = latex.trim();
 
-  if (!lines.length) return null;
+  if (math.startsWith("$$") && math.endsWith("$$")) {
+    math = math.slice(2, -2).trim();
+  }
 
   return (
-    <div className={`space-y-2 ${className}`}>
-      {lines.map((line, i) => (
-        <BlockMath
-          key={i}
-          math={line}
-          errorColor="#dc2626"
-          renderError={() => (
-            <pre className="whitespace-pre-wrap rounded-lg bg-subtle px-2 py-1 font-mono text-[11px] text-ink-soft">
-              {line}
-            </pre>
-          )}
-        />
-      ))}
+    <div className={className}>
+      <BlockMath
+        math={math}
+        errorColor="#dc2626"
+        renderError={() => (
+          <pre className="whitespace-pre-wrap rounded-lg bg-subtle px-2 py-1 font-mono text-[11px]">
+            {math}
+          </pre>
+        )}
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -17,7 +17,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-import { getRecentSolvesAction, solverAction } from "@/_actions_/solver.action";
+import { getRecentSolvesAction, identifyByImageAction, solverAction } from "@/_actions_/solver.action";
 import type { HistoricSession, TopicColor } from "@/types/solver.types";
 
 const TOPIC_COLORS = {
@@ -38,6 +38,8 @@ export default function SolvePage() {
 
   const [history, setHistory] = useState<HistoricSession[]>([]);
   const [historyError, setHistoryError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isIdentifying, setIsIdentifying] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -70,6 +72,30 @@ export default function SolvePage() {
     }
   };
 
+  const handleImageSelect = async (
+  e: React.ChangeEvent<HTMLInputElement>
+) => {
+  const file = e.target.files?.[0];
+
+  if (!file) return;
+
+  setIsIdentifying(true);
+
+  try {
+    const result = await identifyByImageAction(file);
+    setInputQuery(result.question);
+  } catch (err) {
+    setSolveError(
+      err instanceof Error
+        ? err.message
+        : "Failed to identify text from image."
+    );
+  } finally {
+    setIsIdentifying(false);
+    e.target.value = "";
+  }
+};
+
   return (
     <div className="flex min-h-screen bg-[#F9FAFC] text-ink antialiased">
       <main className="flex-1 md:pr-64">
@@ -99,9 +125,25 @@ export default function SolvePage() {
                 onKeyDown={(e) => e.key === "Enter" && triggerSolve()}
               />
               <div className="flex items-center gap-1.5 ml-2">
-                <button className="p-2 rounded-xl border border-border bg-white text-ink-soft hover:text-ink transition-colors" title="Snap homework image">
-                  <Camera className="h-4 w-4" />
-                </button>
+                <input
+  ref={fileInputRef}
+  type="file"
+  accept="image/*"
+  className="hidden"
+  onChange={handleImageSelect}
+/>
+                <button
+  onClick={() => fileInputRef.current?.click()}
+  disabled={isIdentifying}
+  className="p-2 rounded-xl border border-border bg-white text-ink-soft hover:text-ink transition-colors disabled:opacity-60"
+  title="Snap homework image"
+>
+  {isIdentifying ? (
+    <RefreshCw className="h-4 w-4 animate-spin" />
+  ) : (
+    <Camera className="h-4 w-4" />
+  )}
+</button>
                 <button
                   onClick={triggerSolve}
                   disabled={isSolving}

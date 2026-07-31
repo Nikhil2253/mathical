@@ -7,6 +7,9 @@ const SOLVER_API_URL =
   process.env.SOLVER_API_URL ?? "http://localhost:8000/v1/solve";
 const HISTORY_API_URL =
   process.env.HISTORY_API_URL ?? "http://localhost:8000/v1/history";
+const IMAGE_TO_TEXT_API_URL =
+  process.env.IMAGE_TO_TEXT_API_URL ??
+  "http://localhost:8000/v1/identify-by-image";
 
 const TOKEN_KEY = "mathical_access_token";
 
@@ -101,4 +104,37 @@ export async function getRecentSolvesAction(): Promise<HistoricSession[]> {
   }
 
   return (await res.json()) as HistoricSession[];
+}
+
+export async function identifyByImageAction(
+  file: File
+): Promise<{ success: boolean; question: string }> {
+  const authHeader = await getAuthHeader();
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(IMAGE_TO_TEXT_API_URL, {
+    method: "POST",
+    headers: {
+      ...authHeader,
+    },
+    body: formData,
+    cache: "no-store",
+  });
+
+  if (res.status === 401) {
+    throw new Error("Your session has expired. Please sign in again.");
+  }
+
+  if (!res.ok) {
+    throw new Error(
+      `Image identification backend responded with status ${res.status}`
+    );
+  }
+
+  return (await res.json()) as {
+    success: boolean;
+    question: string;
+  };
 }
