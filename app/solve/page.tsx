@@ -19,6 +19,7 @@ import {
 
 import { getRecentSolvesAction, identifyByImageAction, solverAction } from "@/_actions_/solver.action";
 import type { HistoricSession, TopicColor } from "@/types/solver.types";
+import CameraModal from "../components/CameraModal";
 
 const TOPIC_COLORS = {
   sky: { bg: "bg-sky-light/60", text: "text-sky", border: "border-sky/30", solid: "bg-sky", glow: "shadow-sky/10" },
@@ -38,6 +39,8 @@ export default function SolvePage() {
 
   const [history, setHistory] = useState<HistoricSession[]>([]);
   const [historyError, setHistoryError] = useState<string | null>(null);
+  const [showImageOptions, setShowImageOptions] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isIdentifying, setIsIdentifying] = useState(false);
 
@@ -79,6 +82,12 @@ export default function SolvePage() {
 
   if (!file) return;
 
+  await processImage(file);
+
+  e.target.value = "";
+};
+
+  const processImage = async (file: File) => {
   setIsIdentifying(true);
 
   try {
@@ -92,7 +101,6 @@ export default function SolvePage() {
     );
   } finally {
     setIsIdentifying(false);
-    e.target.value = "";
   }
 };
 
@@ -126,24 +134,23 @@ export default function SolvePage() {
               />
               <div className="flex items-center gap-1.5 ml-2">
                 <input
-  ref={fileInputRef}
-  type="file"
-  accept="image/*"
-  className="hidden"
-  onChange={handleImageSelect}
-/>
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageSelect}
+                />
                 <button
-  onClick={() => fileInputRef.current?.click()}
-  disabled={isIdentifying}
-  className="p-2 rounded-xl border border-border bg-white text-ink-soft hover:text-ink transition-colors disabled:opacity-60"
-  title="Snap homework image"
->
-  {isIdentifying ? (
-    <RefreshCw className="h-4 w-4 animate-spin" />
-  ) : (
-    <Camera className="h-4 w-4" />
-  )}
-</button>
+                  onClick={() => setShowImageOptions(true)}
+                  disabled={isIdentifying}
+                  className="p-2 rounded-xl border border-border bg-white text-ink-soft hover:text-ink transition-colors disabled:opacity-60"
+                >
+                  {isIdentifying ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Camera className="h-4 w-4" />
+                  )}
+                </button>
                 <button
                   onClick={triggerSolve}
                   disabled={isSolving}
@@ -191,55 +198,139 @@ export default function SolvePage() {
       </main>
 
       <aside className="fixed inset-y-0 right-0 z-20 hidden w-64 border-l border-border bg-white p-5 md:flex flex-col justify-between">
-              <div className="space-y-6">
-                <div className="flex items-center gap-2.5 px-1">
-                  <img src="/mathical-logo.png" className="h-15 w-full" />
-                </div>
-      
+        <div className="space-y-6">
+          <div className="flex items-center gap-2.5 px-1">
+            <img src="/mathical-logo.png" className="h-15 w-full" />
+          </div>
+
+          <button
+            onClick={() => router.push("/solve")}
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary  to-sky px-4 py-2.5 text-xs font-medium text-white shadow-soft transition-all hover:bg-primary-dark"
+          >
+            <Plus className="h-3.5 w-3.5" /> New Problem Canvas
+          </button>
+
+          <div>
+            <div className="flex items-center gap-1.5 px-1 mb-2 text-[11px] font-mono uppercase tracking-wider text-muted">
+              <History className="h-3 w-3" /> Recent Solves
+            </div>
+            <div className="space-y-1">
+              {historyError && (
+                <p className="px-3 py-2 text-[11px] text-pink">{historyError}</p>
+              )}
+              {history.map((session) => {
+                const c = TOPIC_COLORS[session.color] ?? TOPIC_COLORS.primary;
+                return (
+                  <button
+                    key={session.id}
+                    onClick={() => router.push(`/solve/${session.id}`)}
+                    className={`flex w-full flex-row-reverse gap-2 items-center justify-end rounded-xl border-2 border-sky-50 px-3 py-2.5 text-left text-xs transition-colors hover:bg-subtle`}
+                  >
+                    <span className="font-mono text-ink line-clamp-1">{session.question}</span>
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-block h-1.5 w-1.5 rounded-full ${c.solid}`} />
+                      <span className="text-[10px] text-ink-soft">{session.topic}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-border bg-subtle p-3 text-xs flex items-center gap-3">
+          <div className="h-8 w-8 rounded-full bg-sky/10 flex items-center justify-center font-mono font-medium text-sky">
+            NS
+          </div>
+          <div>
+            <p className="font-medium text-ink">Nikhil Saxena</p>
+          </div>
+        </div>
+      </aside>
+
+      <AnimatePresence>
+        {showImageOptions && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowImageOptions(false)}
+              className="fixed inset-0 z-40 bg-black/40"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed left-1/2 top-1/2 z-50 w-[290px] -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-5 shadow-2xl"
+            >
+
+              <p className="mt-1 text-lg font-medium text-gray-800950">
+                Capture or Upload Image
+              </p>
+
+              <div className="mt-6 space-y-3">
                 <button
-                  onClick={() => router.push("/solve")}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary  to-sky px-4 py-2.5 text-xs font-medium text-white shadow-soft transition-all hover:bg-primary-dark"
+                  onClick={() => {
+                    setShowImageOptions(false);
+                    setShowCamera(true);
+                  }}
+                  className="flex w-full items-center gap-4 rounded-lg border-2 border-gray-200 cursor-pointer p-4 hover:bg-gray-50"
                 >
-                  <Plus className="h-3.5 w-3.5" /> New Problem Canvas
+                  <Camera className="h-6 w-6 text-blue-500" />
+
+                  <div className="text-left">
+                    <p className="font-medium">
+                      Open Camera
+                    </p>
+
+                    <p className="text-sm text-gray-500">
+                      Capture a math question.
+                    </p>
+                  </div>
                 </button>
-      
-                <div>
-                  <div className="flex items-center gap-1.5 px-1 mb-2 text-[11px] font-mono uppercase tracking-wider text-muted">
-                    <History className="h-3 w-3" /> Recent Solves
+
+                <button
+                  onClick={() => {
+                    setShowImageOptions(false);
+                    fileInputRef.current?.click();
+                  }}
+                  className="flex w-full items-center gap-4 rounded-lg border-2 border-gray-200 cursor-pointer p-4 hover:bg-gray-50"
+                >
+                  <Shapes className="h-6 w-6 text-yellow-500" />
+
+                  <div className="text-left">
+                    <p className="font-medium">
+                      Upload Image
+                    </p>
+
+                    <p className="text-sm text-gray-500">
+                      Choose from your device.
+                    </p>
                   </div>
-                  <div className="space-y-1">
-                    {historyError && (
-                      <p className="px-3 py-2 text-[11px] text-pink">{historyError}</p>
-                    )}
-                    {history.map((session) => {
-                      const c = TOPIC_COLORS[session.color] ?? TOPIC_COLORS.primary;
-                      return (
-                        <button
-                          key={session.id}
-                          onClick={() => router.push(`/solve/${session.id}`)}
-                          className={`flex w-full flex-row-reverse gap-2 items-center justify-end rounded-xl border-2 border-sky-50 px-3 py-2.5 text-left text-xs transition-colors hover:bg-subtle`}
-                        >
-                          <span className="font-mono text-ink line-clamp-1">{session.question}</span>
-                          <div className="flex items-center gap-2">
-                            <span className={`inline-block h-1.5 w-1.5 rounded-full ${c.solid}`} />
-                            <span className="text-[10px] text-ink-soft">{session.topic}</span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                </button>
               </div>
-      
-              <div className="rounded-xl border border-border bg-subtle p-3 text-xs flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-sky/10 flex items-center justify-center font-mono font-medium text-sky">
-                  NS
-                </div>
-                <div>
-                  <p className="font-medium text-ink">Nikhil Saxena</p>
-                </div>
-              </div>
-            </aside>
+
+              <button
+                onClick={() => setShowImageOptions(false)}
+                className="mt-6 w-full text-gray-800 font-extrabold cursor-pointer rounded-[4px] border-4 border-gray-950 py-2 bg-[#308aff] hover:bg-[#ff4830]"
+              >
+                Cancel
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+      {showCamera && (
+        <CameraModal
+          onClose={() => setShowCamera(false)}
+          onCapture={async (file) => {
+  setShowCamera(false);
+  await processImage(file);
+}}
+        />
+      )}
     </div>
   );
 }
