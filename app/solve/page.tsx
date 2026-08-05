@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -17,8 +17,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-import { getRecentSolvesAction, identifyByImageAction, solverAction } from "@/_actions_/solver.action";
-import type { HistoricSession, TopicColor } from "@/types/solver.types";
+import { identifyByImageAction, solverAction } from "@/_actions_/solver.action";
+import type { TopicColor } from "@/types/solver.types";
 import CameraModal from "../components/CameraModal";
 
 const TOPIC_COLORS = {
@@ -37,28 +37,10 @@ export default function SolvePage() {
   const [isSolving, setIsSolving] = useState(false);
   const [solveError, setSolveError] = useState<string | null>(null);
 
-  const [history, setHistory] = useState<HistoricSession[]>([]);
-  const [historyError, setHistoryError] = useState<string | null>(null);
   const [showImageOptions, setShowImageOptions] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isIdentifying, setIsIdentifying] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    getRecentSolvesAction()
-      .then((sessions) => {
-        if (!cancelled) setHistory(sessions);
-      })
-      .catch((err) => {
-        if (!cancelled) setHistoryError(err instanceof Error ? err.message : "Failed to load history.");
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const triggerSolve = async () => {
     if (!inputQuery.trim() || isSolving) return;
@@ -106,7 +88,7 @@ export default function SolvePage() {
 
   return (
     <div className="flex min-h-screen bg-[#F9FAFC] text-ink antialiased">
-      <main className="flex-1 md:pr-64">
+      <main className="flex-1">
         <div className="mx-auto max-w-6xl px-4 py-6 md:px-8 md:py-8 space-y-6">
 
           <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-softer">
@@ -196,57 +178,6 @@ export default function SolvePage() {
 
         </div>
       </main>
-
-      <aside className="fixed inset-y-0 right-0 z-20 hidden w-64 border-l border-border bg-white p-5 md:flex flex-col justify-between">
-        <div className="space-y-6">
-          <div className="flex items-center gap-2.5 px-1">
-            <img src="/mathical-logo.png" className="h-15 w-full" />
-          </div>
-
-          <button
-            onClick={() => router.push("/solve")}
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary  to-sky px-4 py-2.5 text-xs font-medium text-white shadow-soft transition-all hover:bg-primary-dark"
-          >
-            <Plus className="h-3.5 w-3.5" /> New Problem Canvas
-          </button>
-
-          <div>
-            <div className="flex items-center gap-1.5 px-1 mb-2 text-[11px] font-mono uppercase tracking-wider text-muted">
-              <History className="h-3 w-3" /> Recent Solves
-            </div>
-            <div className="space-y-1">
-              {historyError && (
-                <p className="px-3 py-2 text-[11px] text-pink">{historyError}</p>
-              )}
-              {history.map((session) => {
-                const c = TOPIC_COLORS[session.color] ?? TOPIC_COLORS.primary;
-                return (
-                  <button
-                    key={session.id}
-                    onClick={() => router.push(`/solve/${session.id}`)}
-                    className={`flex w-full flex-row-reverse gap-2 items-center justify-end rounded-xl border-2 border-sky-50 px-3 py-2.5 text-left text-xs transition-colors hover:bg-subtle`}
-                  >
-                    <span className="font-mono text-ink line-clamp-1">{session.question}</span>
-                    <div className="flex items-center gap-2">
-                      <span className={`inline-block h-1.5 w-1.5 rounded-full ${c.solid}`} />
-                      <span className="text-[10px] text-ink-soft">{session.topic}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-border bg-subtle p-3 text-xs flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full bg-sky/10 flex items-center justify-center font-mono font-medium text-sky">
-            NS
-          </div>
-          <div>
-            <p className="font-medium text-ink">Nikhil Saxena</p>
-          </div>
-        </div>
-      </aside>
 
       <AnimatePresence>
         {showImageOptions && (
