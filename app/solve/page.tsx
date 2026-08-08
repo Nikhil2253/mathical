@@ -20,6 +20,7 @@ import {
 import { identifyByImageAction, solverAction } from "@/_actions_/solver.action";
 import type { TopicColor } from "@/types/solver.types";
 import CameraModal from "../components/CameraModal";
+import ImageCropModal from "../components/ImageCropModal";
 
 const TOPIC_COLORS = {
   sky: { bg: "bg-sky-light/60", text: "text-sky", border: "border-sky/30", solid: "bg-sky", glow: "shadow-sky/10" },
@@ -42,6 +43,9 @@ export default function SolvePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isIdentifying, setIsIdentifying] = useState(false);
 
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [showCrop, setShowCrop] = useState(false);
+
   const triggerSolve = async () => {
     if (!inputQuery.trim() || isSolving) return;
 
@@ -57,34 +61,31 @@ export default function SolvePage() {
     }
   };
 
-  const handleImageSelect = async (
-  e: React.ChangeEvent<HTMLInputElement>
-) => {
-  const file = e.target.files?.[0];
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  if (!file) return;
-
-  await processImage(file);
-
-  e.target.value = "";
-};
+    setPendingFile(file);
+    setShowCrop(true);
+    e.target.value = "";
+  };
 
   const processImage = async (file: File) => {
-  setIsIdentifying(true);
+    setIsIdentifying(true);
 
-  try {
-    const result = await identifyByImageAction(file);
-    setInputQuery(result.question);
-  } catch (err) {
-    setSolveError(
-      err instanceof Error
-        ? err.message
-        : "Failed to identify text from image."
-    );
-  } finally {
-    setIsIdentifying(false);
-  }
-};
+    try {
+      const result = await identifyByImageAction(file);
+      setInputQuery(result.question);
+    } catch (err) {
+      setSolveError(
+        err instanceof Error
+          ? err.message
+          : "Failed to identify text from image."
+      );
+    } finally {
+      setIsIdentifying(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-[#F9FAFC] text-ink antialiased">
@@ -254,14 +255,32 @@ export default function SolvePage() {
         )}
       </AnimatePresence>
       {showCamera && (
-        <CameraModal
-          onClose={() => setShowCamera(false)}
-          onCapture={async (file) => {
-  setShowCamera(false);
-  await processImage(file);
-}}
-        />
-      )}
+  <CameraModal
+    onClose={() => setShowCamera(false)}
+    onCapture={(file) => {
+      setShowCamera(false);
+      setPendingFile(file);
+      setShowCrop(true);
+    }}
+  />
+)}
+
+<AnimatePresence>
+  {showCrop && pendingFile && (
+    <ImageCropModal
+      file={pendingFile}
+      onCancel={() => {
+        setShowCrop(false);
+        setPendingFile(null);
+      }}
+      onCropComplete={async (croppedFile) => {
+        setShowCrop(false);
+        setPendingFile(null);
+        await processImage(croppedFile);
+      }}
+    />
+  )}
+</AnimatePresence>
     </div>
   );
 }
